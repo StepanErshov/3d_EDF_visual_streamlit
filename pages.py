@@ -256,6 +256,7 @@ def render_eeg_analysis_content():
                     data, times = raw[channel_idx, :]
                     
                     from scipy import signal
+                    # data[0] извлекает данные канала из 2D массива
                     freqs, psd = signal.welch(data[0], fs=raw.info['sfreq'], nperseg=1024)
                     
                     spectrum_fig = go.Figure()
@@ -397,30 +398,51 @@ def load_eeg_data(file_path):
         return None
 
 def create_eeg_plot(raw, channel_name=None, time_range=None):
-    if channel_name is None:
-        channel_name = raw.ch_names[0]
-    
-    channel_idx = raw.ch_names.index(channel_name)
-    data, times = raw[channel_idx, :]
-    
-    if time_range is not None:
-        start_time, end_time = time_range
-        start_idx = np.where(times >= start_time)[0][0]
-        end_idx = np.where(times <= end_time)[0][-1]
-        data = data[0, start_idx:end_idx]
-        times = times[start_idx:end_idx]
-    
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(x=times, y=data[0], mode='lines', name=channel_name))
-    
-    fig.update_layout(
-        title=f'EEG Signal - {channel_name}',
-        xaxis_title='Time (s)',
-        yaxis_title='Amplitude (μV)',
-        height=400
-    )
-    
-    return fig
+    """Создает график ЭЭГ"""
+    try:
+        if channel_name is None:
+            channel_name = raw.ch_names[0]
+        
+        channel_idx = raw.ch_names.index(channel_name)
+        data, times = raw[channel_idx, :]
+        
+        if time_range is not None:
+            start_time, end_time = time_range
+            start_idx = np.where(times >= start_time)[0][0]
+            end_idx = np.where(times <= end_time)[0][-1]
+            data = data[0, start_idx:end_idx]
+            times = times[start_idx:end_idx]
+        
+        fig = go.Figure()
+        # Исправляем проблему с типами данных
+        if time_range is not None:
+            # data уже обработан в блоке выше и является 1D массивом
+            y_data = data
+        else:
+            # data является 2D массивом, извлекаем первую строку
+            y_data = data[0]
+        
+        # Убеждаемся, что данные имеют правильный тип
+        y_data = np.asarray(y_data).flatten()
+        times = np.asarray(times).flatten()
+        
+        fig.add_trace(go.Scatter(x=times, y=y_data, mode='lines', name=channel_name))
+        
+        fig.update_layout(
+            title=f'EEG Signal - {channel_name}',
+            xaxis_title='Time (s)',
+            yaxis_title='Amplitude (μV)',
+            height=400
+        )
+        
+        return fig
+        
+    except Exception as e:
+        st.error(f"Error creating EEG plot: {e}")
+        # Возвращаем пустую фигуру в случае ошибки
+        fig = go.Figure()
+        fig.update_layout(title="Error: Could not create EEG plot")
+        return fig
 
 def create_3d_surface_plot(data, isovalue=0.5, opacity=0.7):
     try:
