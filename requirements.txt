@@ -1,0 +1,12 @@
+streamlit>=1.28.0
+numpy>=1.24.0
+nibabel>=5.1.0
+matplotlib>=3.7.0
+plotly>=5.15.0
+pandas>=2.0.0
+mne>=1.4.0
+scikit-image>=0.21.0
+scipy>=1.11.0
+pillow>=10.0.0
+vtk>=9.2.0
+vedo>=2023.4.0

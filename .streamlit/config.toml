@@ -1,0 +1,9 @@
+[server]
+fileWatcherType = "none"
+maxUploadSize = 500
+
+[runner]
+magicEnabled = false
+
+[client]
+caching = false
